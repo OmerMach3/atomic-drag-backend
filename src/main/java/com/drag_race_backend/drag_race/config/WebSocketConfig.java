@@ -16,9 +16,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         config.setApplicationDestinationPrefixes("/app"); // İstemcilerin mesaj göndereceği ön ek
     }
 
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Android uygulamasının bağlanacağı adres
-        registry.addEndpoint("/ws-race").setAllowedOrigins("*");
-    }
+@Override
+public void registerStompEndpoints(StompEndpointRegistry registry) {
+    registry.addEndpoint("/ws-race")
+            .setAllowedOriginPatterns("*");  // ← was setAllowedOrigins("*")
+}
 }
