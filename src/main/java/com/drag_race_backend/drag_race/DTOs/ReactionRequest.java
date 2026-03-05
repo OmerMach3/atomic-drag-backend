@@ -5,7 +5,7 @@ public class ReactionRequest {
     private long reactionMs;
     private double distance; // YENİ EKLENEN ALAN
 
-    // 1. Spring Boot'un JSON işlemleri için boş constructor (Best Practice)
+    // 1. Spring Boot'un JSON işlemleri için boş constructorr
     public ReactionRequest() {
     }
 
@@ -44,7 +44,7 @@ public class ReactionRequest {
     // YENİ: Android'e gidecek olan String formatı
     @Override
     public String toString() {
-        // Çıktı: "Can: 215ms (402.5m)"
+        
         return String.format("%s: %dms (%.1fm)", playerName, reactionMs, distance);
     }
 }
