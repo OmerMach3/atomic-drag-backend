@@ -55,10 +55,10 @@ public class RaceController {
                 + ", time=" + message.getReactionTime()
                 + ", distance=" + message.getDistanceMeters()); // ← log it
 
-        // Use accelerometer distance directly — GPS is unreliable for short races
+        // Use accelerometer distance directly — because GPS is unreliable in short races
         double distance = message.getDistanceMeters();
 
-        // Fallback to GPS only if accelerometer distance is 0 (e.g. old client)
+        // Fallback to GPS only if accelerometer distance is 0 
         if (distance == 0.0) {
             /*
              * distance = calculateDistance(
