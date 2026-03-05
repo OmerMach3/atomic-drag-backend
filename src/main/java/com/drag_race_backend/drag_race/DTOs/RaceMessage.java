@@ -50,7 +50,7 @@ public class RaceMessage {
         this.reactionTime = reactionTime;
     }
 
-    // Mevcut Getter/Setter'lar 
+    
     public double getStartLat() {
         return startLat;
     }
