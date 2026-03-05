@@ -21,12 +21,12 @@ public class RaceMessage {
     private double endLng;
     private double distanceMeters;
 
-    // 1. KRİTİK EKSİK: Parametresiz Constructor
+    // Parametresiz Constructor
     // Spring Boot (Jackson), JSON'ı bu sınıfa çevirirken buna ihtiyaç duyar.
     public RaceMessage() {
     }
 
-    // Mevcut Constructor (Opsiyonel olarak güncelleyebilirsin)
+    // Mevcut Constructor 
     public RaceMessage(String type, Long startTime, List<String> results) {
         this.type = type;
         this.startTime = startTime;
@@ -50,7 +50,7 @@ public class RaceMessage {
         this.reactionTime = reactionTime;
     }
 
-    // Mevcut Getter/Setter'lar (Doğru görünüyor)
+    // Mevcut Getter/Setter'lar 
     public double getStartLat() {
         return startLat;
     }
@@ -97,7 +97,7 @@ public class RaceMessage {
 
     public void setType(String type) {
         this.type = type;
-    } // Setter eklemek iyi olur
+    } 
 
     public Long getStartTime() {
         return startTime;
