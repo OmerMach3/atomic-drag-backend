@@ -48,16 +48,10 @@ public class RaceController {
         RaceMessage startMsg = new RaceMessage("START", durationMs, null);
         messagingTemplate.convertAndSend("/topic/race/" + roomCode, startMsg);
 
-        // Hard timeout — force send results after 15 seconds regardless
+        // Hard timeout — force finish after 15 seconds no matter what
         CompletableFuture.delayedExecutor(15, TimeUnit.SECONDS).execute(() -> {
-            List<ReactionRequest> results = roomResults.getOrDefault(roomCode, Collections.emptyList());
-            if (!results.isEmpty()) {
-                List<String> resultStrings = results.stream()
-                        .map(ReactionRequest::toString)
-                        .collect(Collectors.toList());
-                RaceMessage finishMsg = new RaceMessage("FINISH", 0L, resultStrings);
-                messagingTemplate.convertAndSend("/topic/race/" + roomCode, finishMsg);
-            }
+            roomFinishRequested.put(roomCode, true); // ← set flag first
+            trySendFinish(roomCode);
         });
     }
 
@@ -75,8 +69,8 @@ public class RaceController {
         int resultCount = roomResults.get(roomCode).size();
 
         if (resultCount >= playerCount) {
-            // Wait 2 seconds before sending finish — gives late results time to arrive
             CompletableFuture.delayedExecutor(2, TimeUnit.SECONDS).execute(() -> {
+                roomFinishRequested.put(roomCode, true); // ← set flag first
                 trySendFinish(roomCode);
             });
         }
