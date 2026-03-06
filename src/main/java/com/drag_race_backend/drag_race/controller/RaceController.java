@@ -10,8 +10,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Controller
 public class RaceController {
@@ -41,40 +44,42 @@ public class RaceController {
         roomFinishRequested.remove(roomCode);
         roomResults.put(roomCode, new CopyOnWriteArrayList<>());
 
-        long durationMs = 5000; // sadece süre gönder
+        long durationMs = 5000;
         RaceMessage startMsg = new RaceMessage("START", durationMs, null);
         messagingTemplate.convertAndSend("/topic/race/" + roomCode, startMsg);
 
-        System.out.println("Yarış başlatıldı: " + roomCode);
+        // Hard timeout — force send results after 15 seconds regardless
+        CompletableFuture.delayedExecutor(15, TimeUnit.SECONDS).execute(() -> {
+            List<ReactionRequest> results = roomResults.getOrDefault(roomCode, Collections.emptyList());
+            if (!results.isEmpty()) {
+                List<String> resultStrings = results.stream()
+                        .map(ReactionRequest::toString)
+                        .collect(Collectors.toList());
+                RaceMessage finishMsg = new RaceMessage("FINISH", 0L, resultStrings);
+                messagingTemplate.convertAndSend("/topic/race/" + roomCode, finishMsg);
+            }
+        });
     }
 
     @MessageMapping("/reaction/{roomCode}")
     public void handleReaction(@DestinationVariable String roomCode, RaceMessage message) {
-        System.out.println("handleReaction çağrıldı: roomCode=" + roomCode
-                + ", player=" + message.getPlayerName()
-                + ", time=" + message.getReactionTime()
-                + ", distance=" + message.getDistanceMeters()); // ← log it
-
-        // Use accelerometer distance directly — because GPS is unreliable in short races
         double distance = message.getDistanceMeters();
-
-        // Fallback to GPS only if accelerometer distance is 0 
-        if (distance == 0.0) {
-            /*
-             * distance = calculateDistance(
-             * message.getStartLat(), message.getStartLng(),
-             * message.getEndLat(), message.getEndLng());
-             */
-        }
-
         ReactionRequest request = new ReactionRequest(
                 message.getPlayerName(),
                 message.getReactionTime(),
                 distance);
 
         roomResults.computeIfAbsent(roomCode, k -> new CopyOnWriteArrayList<>()).add(request);
-        trySendFinish(roomCode);
-        System.out.println("Liste güncellendi. Toplam: " + roomResults.get(roomCode).size());
+
+        int playerCount = roomPlayers.getOrDefault(roomCode, Collections.emptySet()).size();
+        int resultCount = roomResults.get(roomCode).size();
+
+        if (resultCount >= playerCount) {
+            // Wait 2 seconds before sending finish — gives late results time to arrive
+            CompletableFuture.delayedExecutor(2, TimeUnit.SECONDS).execute(() -> {
+                trySendFinish(roomCode);
+            });
+        }
     }
 
     @MessageMapping("/brake/{roomCode}")
